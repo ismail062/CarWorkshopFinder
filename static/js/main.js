@@ -129,6 +129,11 @@ function submitReview(workshopId) {
     const reviewText = document.getElementById(`review-text-${workshopId}`).value;
     const rating = document.getElementById(`rating-${workshopId}`).value;
 
+    if (!reviewText.trim()) {
+        alert('Please enter a review before submitting.');
+        return;
+    }
+
     fetch('/submit_rating_review', {
         method: 'POST',
         headers: {
@@ -140,16 +145,24 @@ function submitReview(workshopId) {
             review: reviewText
         }),
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
             alert('Review submitted successfully!');
             getUserLocation(); // Refresh the workshop list
         } else {
-            alert('Failed to submit review. Please try again.');
+            alert('Failed to submit review: ' + (data.error || 'Unknown error'));
         }
     })
-    .catch(error => console.error('Error submitting review:', error));
+    .catch(error => {
+        console.error('Error submitting review:', error);
+        alert('An error occurred while submitting the review. Please try again.');
+    });
 }
 
 document.addEventListener('DOMContentLoaded', function() {

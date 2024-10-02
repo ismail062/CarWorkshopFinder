@@ -3,8 +3,12 @@ from flask import Flask, render_template, jsonify, request
 import requests
 from urllib.parse import quote
 import json
+import logging
 
 app = Flask(__name__)
+
+# Configure logging
+logging.basicConfig(level=logging.DEBUG)
 
 # In-memory storage for ratings and reviews (replace with a database in production)
 ratings_reviews = {}
@@ -63,20 +67,31 @@ def get_workshops():
 
 @app.route('/submit_rating_review', methods=['POST'])
 def submit_rating_review():
-    data = request.json
-    workshop_id = data['workshop_id']
-    rating = data['rating']
-    review = data['review']
-    
-    if workshop_id not in ratings_reviews:
-        ratings_reviews[workshop_id] = {'rating': 0, 'reviews': []}
-    
-    workshop_data = ratings_reviews[workshop_id]
-    workshop_data['reviews'].append({'rating': rating, 'review': review})
-    total_ratings = sum(r['rating'] for r in workshop_data['reviews'])
-    workshop_data['rating'] = total_ratings / len(workshop_data['reviews'])
-    
-    return jsonify({'success': True})
+    try:
+        data = request.json
+        if data is None:
+            raise ValueError("No JSON data received")
+        
+        workshop_id = data.get('workshop_id')
+        rating = data.get('rating')
+        review = data.get('review')
+        
+        if not all([workshop_id, rating, review]):
+            raise ValueError("Missing required fields")
+        
+        if workshop_id not in ratings_reviews:
+            ratings_reviews[workshop_id] = {'rating': 0, 'reviews': []}
+        
+        workshop_data = ratings_reviews[workshop_id]
+        workshop_data['reviews'].append({'rating': rating, 'review': review})
+        total_ratings = sum(r['rating'] for r in workshop_data['reviews'])
+        workshop_data['rating'] = total_ratings / len(workshop_data['reviews'])
+        
+        app.logger.info(f"Review submitted for workshop {workshop_id}: Rating {rating}, Review: {review}")
+        return jsonify({'success': True})
+    except Exception as e:
+        app.logger.error(f"Error submitting review: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 400
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
