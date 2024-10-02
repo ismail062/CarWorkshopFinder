@@ -24,6 +24,18 @@
             </div>
             <div>
                 <h2 class="text-xl font-semibold mb-4">Nearby Workshops</h2>
+                <div class="mb-4">
+                    <h3 class="text-lg font-semibold mb-2">Filters</h3>
+                    <select id="service-filter" class="border rounded p-2 mr-2">
+                        <option value="">All Services</option>
+                        <option value="Oil Change">Oil Change</option>
+                        <option value="Brake Service">Brake Service</option>
+                        <option value="Tire Rotation">Tire Rotation</option>
+                        <option value="Engine Tune-up">Engine Tune-up</option>
+                    </select>
+                    <input type="number" id="max-price-filter" class="border rounded p-2 mr-2" placeholder="Max Price">
+                    <button onclick="applyFilters()" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Apply Filters</button>
+                </div>
                 <ul id="workshop-list" class="workshop-list bg-white rounded shadow p-4"></ul>
             </div>
         </div>

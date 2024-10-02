@@ -1,6 +1,7 @@
 let map;
 let userMarker;
 let workshopMarkers = [];
+let allWorkshops = [];
 
 function initMap() {
     map = L.map('map').setView([0, 0], 13);
@@ -81,6 +82,7 @@ function getWorkshops(lat, lon) {
     .then(response => response.json())
     .then(workshops => {
         console.log("Received workshops data:", workshops);
+        allWorkshops = workshops;
         displayWorkshops(workshops);
         addWorkshopsToMap(workshops);
     })
@@ -98,6 +100,13 @@ function displayWorkshops(workshops) {
             <p>${workshop.address}</p>
             <p>Distance: ${calculateDistance(userMarker.getLatLng(), L.latLng(workshop.lat, workshop.lon)).toFixed(2)} km</p>
             <p>Average Rating: ${workshop.rating.toFixed(1)} / 5 (${workshop.total_reviews} ${workshop.total_reviews === 1 ? 'review' : 'reviews'})</p>
+            <p>Services: ${workshop.services.join(', ')}</p>
+            <p>Pricing:</p>
+            <ul>
+                ${Object.entries(workshop.pricing).map(([service, price]) => `
+                    <li>${service}: £${price}</li>
+                `).join('')}
+            </ul>
             <button onclick="getDirections(${workshop.lat}, ${workshop.lon})" class="mt-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                 Get Directions
             </button>
@@ -132,6 +141,20 @@ function displayWorkshops(workshops) {
         workshopList.appendChild(li);
     });
     initializeStarRatings();
+}
+
+function applyFilters() {
+    const serviceFilter = document.getElementById('service-filter').value;
+    const maxPriceFilter = parseFloat(document.getElementById('max-price-filter').value);
+
+    const filteredWorkshops = allWorkshops.filter(workshop => {
+        const serviceMatch = !serviceFilter || workshop.services.includes(serviceFilter);
+        const priceMatch = !maxPriceFilter || Object.values(workshop.pricing).some(price => price <= maxPriceFilter);
+        return serviceMatch && priceMatch;
+    });
+
+    displayWorkshops(filteredWorkshops);
+    addWorkshopsToMap(filteredWorkshops);
 }
 
 function initializeStarRatings() {
