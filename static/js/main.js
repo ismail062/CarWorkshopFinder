@@ -69,17 +69,12 @@ function displayWorkshops(workshops) {
             </button>
             <div id="review-form-${workshop.id}" class="hidden mt-4">
                 <textarea id="review-text-${workshop.id}" class="w-full p-2 border rounded" placeholder="Write your review"></textarea>
-                <div class="star-rating mt-2">
-                    <input type="radio" id="star5-${workshop.id}" name="rating-${workshop.id}" value="5" />
-                    <label for="star5-${workshop.id}" title="5 stars"></label>
-                    <input type="radio" id="star4-${workshop.id}" name="rating-${workshop.id}" value="4" />
-                    <label for="star4-${workshop.id}" title="4 stars"></label>
-                    <input type="radio" id="star3-${workshop.id}" name="rating-${workshop.id}" value="3" />
-                    <label for="star3-${workshop.id}" title="3 stars"></label>
-                    <input type="radio" id="star2-${workshop.id}" name="rating-${workshop.id}" value="2" />
-                    <label for="star2-${workshop.id}" title="2 stars"></label>
-                    <input type="radio" id="star1-${workshop.id}" name="rating-${workshop.id}" value="1" />
-                    <label for="star1-${workshop.id}" title="1 star"></label>
+                <div class="star-rating mt-2" data-workshop-id="${workshop.id}">
+                    <i class="fas fa-star" data-rating="1"></i>
+                    <i class="fas fa-star" data-rating="2"></i>
+                    <i class="fas fa-star" data-rating="3"></i>
+                    <i class="fas fa-star" data-rating="4"></i>
+                    <i class="fas fa-star" data-rating="5"></i>
                 </div>
                 <button onclick="submitReview('${workshop.id}')" class="mt-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                     Submit Review
@@ -98,6 +93,55 @@ function displayWorkshops(workshops) {
             </div>
         `;
         workshopList.appendChild(li);
+    });
+    initializeStarRatings();
+}
+
+function initializeStarRatings() {
+    const starContainers = document.querySelectorAll('.star-rating');
+    starContainers.forEach(container => {
+        const stars = container.querySelectorAll('.fa-star');
+        stars.forEach(star => {
+            star.addEventListener('click', () => {
+                const rating = star.getAttribute('data-rating');
+                updateStarRating(container, rating);
+            });
+            star.addEventListener('mouseover', () => {
+                const rating = star.getAttribute('data-rating');
+                highlightStars(container, rating);
+            });
+            star.addEventListener('mouseout', () => {
+                resetStars(container);
+            });
+        });
+    });
+}
+
+function updateStarRating(container, rating) {
+    container.setAttribute('data-rating', rating);
+    resetStars(container);
+}
+
+function highlightStars(container, rating) {
+    const stars = container.querySelectorAll('.fa-star');
+    stars.forEach(star => {
+        if (star.getAttribute('data-rating') <= rating) {
+            star.classList.add('text-yellow-400');
+        } else {
+            star.classList.remove('text-yellow-400');
+        }
+    });
+}
+
+function resetStars(container) {
+    const currentRating = container.getAttribute('data-rating') || 0;
+    const stars = container.querySelectorAll('.fa-star');
+    stars.forEach(star => {
+        if (star.getAttribute('data-rating') <= currentRating) {
+            star.classList.add('text-yellow-400');
+        } else {
+            star.classList.remove('text-yellow-400');
+        }
     });
 }
 
@@ -129,7 +173,8 @@ function showReviewForm(workshopId) {
 
 function submitReview(workshopId) {
     const reviewText = document.getElementById(`review-text-${workshopId}`).value;
-    const rating = document.querySelector(`input[name="rating-${workshopId}"]:checked`);
+    const ratingContainer = document.querySelector(`.star-rating[data-workshop-id="${workshopId}"]`);
+    const rating = ratingContainer.getAttribute('data-rating');
 
     if (!reviewText.trim()) {
         alert('Please enter a review before submitting.');
@@ -148,7 +193,7 @@ function submitReview(workshopId) {
         },
         body: JSON.stringify({
             workshop_id: workshopId,
-            rating: parseInt(rating.value),
+            rating: parseInt(rating),
             review: reviewText
         }),
     })
