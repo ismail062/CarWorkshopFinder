@@ -90,8 +90,13 @@ function getWorkshops(lat, lon) {
 }
 
 function displayWorkshops(workshops) {
+    console.log("Displaying workshops:", workshops);
     const workshopList = document.getElementById('workshop-list');
     workshopList.innerHTML = '';
+    if (workshops.length === 0) {
+        workshopList.innerHTML = '<p>No workshops found. Try adjusting your filters.</p>';
+        return;
+    }
     workshops.forEach(workshop => {
         const li = document.createElement('li');
         li.className = 'mb-4 p-4 bg-white rounded shadow';
@@ -144,14 +149,21 @@ function displayWorkshops(workshops) {
 }
 
 function applyFilters() {
+    console.log("Applying filters");
     const serviceFilter = document.getElementById('service-filter').value;
     const maxPriceFilter = document.getElementById('max-price-filter').value;
+
+    console.log("Service filter:", serviceFilter);
+    console.log("Max price filter:", maxPriceFilter);
+    console.log("All workshops:", allWorkshops);
 
     const filteredWorkshops = allWorkshops.filter(workshop => {
         const serviceMatch = !serviceFilter || workshop.services.includes(serviceFilter);
         const priceMatch = !maxPriceFilter || Object.values(workshop.pricing).some(price => price <= parseFloat(maxPriceFilter));
         return serviceMatch && priceMatch;
     });
+
+    console.log("Filtered workshops:", filteredWorkshops);
 
     displayWorkshops(filteredWorkshops);
     addWorkshopsToMap(filteredWorkshops);
@@ -278,9 +290,18 @@ function submitReview(workshopId) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+    console.log("DOM content loaded");
     initMap();
     getUserLocation();
 
-    document.getElementById('service-filter').addEventListener('change', applyFilters);
-    document.getElementById('max-price-filter').addEventListener('input', applyFilters);
+    const serviceFilterElement = document.getElementById('service-filter');
+    const maxPriceFilterElement = document.getElementById('max-price-filter');
+
+    if (serviceFilterElement && maxPriceFilterElement) {
+        console.log("Filter elements found");
+        serviceFilterElement.addEventListener('change', applyFilters);
+        maxPriceFilterElement.addEventListener('input', applyFilters);
+    } else {
+        console.error("Filter elements not found");
+    }
 });
