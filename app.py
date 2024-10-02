@@ -2,8 +2,12 @@ import os
 from flask import Flask, render_template, jsonify, request
 import requests
 from urllib.parse import quote
+import json
 
 app = Flask(__name__)
+
+# In-memory storage for ratings and reviews (replace with a database in production)
+ratings_reviews = {}
 
 @app.route('/')
 def index():
@@ -42,14 +46,37 @@ def get_workshops():
         name = element['tags'].get('name', 'Unknown')
         address = element['tags'].get('addr:street', '') + ' ' + element['tags'].get('addr:housenumber', '')
         
+        workshop_id = f"{lat},{lon}"
+        rating_review = ratings_reviews.get(workshop_id, {'rating': 0, 'reviews': []})
+        
         workshops.append({
+            'id': workshop_id,
             'name': name,
             'address': address,
             'lat': lat,
-            'lon': lon
+            'lon': lon,
+            'rating': rating_review['rating'],
+            'reviews': rating_review['reviews']
         })
     
     return jsonify(workshops)
+
+@app.route('/submit_rating_review', methods=['POST'])
+def submit_rating_review():
+    data = request.json
+    workshop_id = data['workshop_id']
+    rating = data['rating']
+    review = data['review']
+    
+    if workshop_id not in ratings_reviews:
+        ratings_reviews[workshop_id] = {'rating': 0, 'reviews': []}
+    
+    workshop_data = ratings_reviews[workshop_id]
+    workshop_data['reviews'].append({'rating': rating, 'review': review})
+    total_ratings = sum(r['rating'] for r in workshop_data['reviews'])
+    workshop_data['rating'] = total_ratings / len(workshop_data['reviews'])
+    
+    return jsonify({'success': True})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

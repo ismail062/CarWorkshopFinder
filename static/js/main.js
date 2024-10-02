@@ -60,9 +60,40 @@ function displayWorkshops(workshops) {
             <h3 class="font-bold">${workshop.name}</h3>
             <p>${workshop.address}</p>
             <p>Distance: ${calculateDistance(userMarker.getLatLng(), L.latLng(workshop.lat, workshop.lon)).toFixed(2)} km</p>
+            <p>Rating: ${workshop.rating.toFixed(1)} / 5</p>
             <button onclick="getDirections(${workshop.lat}, ${workshop.lon})" class="mt-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                 Get Directions
             </button>
+            <button onclick="showReviewForm('${workshop.id}')" class="mt-2 ml-2 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+                Add Review
+            </button>
+            <div id="review-form-${workshop.id}" class="hidden mt-4">
+                <textarea id="review-text-${workshop.id}" class="w-full p-2 border rounded" placeholder="Write your review"></textarea>
+                <div class="mt-2">
+                    <label>Rating: </label>
+                    <select id="rating-${workshop.id}">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                    </select>
+                </div>
+                <button onclick="submitReview('${workshop.id}')" class="mt-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                    Submit Review
+                </button>
+            </div>
+            <div class="mt-4">
+                <h4 class="font-semibold">Reviews:</h4>
+                <ul>
+                    ${workshop.reviews.map(review => `
+                        <li class="mt-2">
+                            <p>Rating: ${review.rating} / 5</p>
+                            <p>${review.review}</p>
+                        </li>
+                    `).join('')}
+                </ul>
+            </div>
         `;
         workshopList.appendChild(li);
     });
@@ -73,7 +104,7 @@ function addWorkshopsToMap(workshops) {
     workshopMarkers = [];
     workshops.forEach(workshop => {
         const marker = L.marker([workshop.lat, workshop.lon]).addTo(map);
-        marker.bindPopup(`<b>${workshop.name}</b><br>${workshop.address}`);
+        marker.bindPopup(`<b>${workshop.name}</b><br>${workshop.address}<br>Rating: ${workshop.rating.toFixed(1)} / 5`);
         workshopMarkers.push(marker);
     });
 }
@@ -87,6 +118,38 @@ function getDirections(lat, lon) {
     const userLon = userMarker.getLatLng().lng;
     const url = `https://www.openstreetmap.org/directions?engine=osrm_car&route=${userLat},${userLon};${lat},${lon}`;
     window.open(url, '_blank');
+}
+
+function showReviewForm(workshopId) {
+    const formElement = document.getElementById(`review-form-${workshopId}`);
+    formElement.classList.toggle('hidden');
+}
+
+function submitReview(workshopId) {
+    const reviewText = document.getElementById(`review-text-${workshopId}`).value;
+    const rating = document.getElementById(`rating-${workshopId}`).value;
+
+    fetch('/submit_rating_review', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            workshop_id: workshopId,
+            rating: parseInt(rating),
+            review: reviewText
+        }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Review submitted successfully!');
+            getUserLocation(); // Refresh the workshop list
+        } else {
+            alert('Failed to submit review. Please try again.');
+        }
+    })
+    .catch(error => console.error('Error submitting review:', error));
 }
 
 document.addEventListener('DOMContentLoaded', function() {
