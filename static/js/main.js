@@ -10,6 +10,7 @@ function initMap() {
 }
 
 function getUserLocation() {
+    showManualLocationInput();
     if ("geolocation" in navigator) {
         navigator.geolocation.getCurrentPosition(function(position) {
             const lat = position.coords.latitude;
@@ -18,21 +19,19 @@ function getUserLocation() {
             getWorkshops(lat, lon);
         }, function(error) {
             console.error("Error getting user location:", error);
-            showManualLocationInput();
         });
-    } else {
-        showManualLocationInput();
     }
 }
 
 function showManualLocationInput() {
     const manualLocationForm = document.createElement('div');
     manualLocationForm.innerHTML = `
-        <h3>Enter your location</h3>
-        <input type="text" id="manual-location" placeholder="City, Country">
-        <button onclick="useManualLocation()">Search</button>
+        <h3 class="text-lg font-semibold mb-2">Enter your location</h3>
+        <input type="text" id="manual-location" class="border rounded p-2 mr-2" placeholder="City, Country">
+        <button onclick="useManualLocation()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Search</button>
     `;
-    document.getElementById('map').appendChild(manualLocationForm);
+    document.getElementById('manual-location-container').innerHTML = '';
+    document.getElementById('manual-location-container').appendChild(manualLocationForm);
 }
 
 function useManualLocation() {
@@ -78,6 +77,7 @@ function getWorkshops(lat, lon) {
     })
     .then(response => response.json())
     .then(workshops => {
+        console.log("Received workshops data:", workshops);
         displayWorkshops(workshops);
         addWorkshopsToMap(workshops);
     })
@@ -94,7 +94,7 @@ function displayWorkshops(workshops) {
             <h3 class="font-bold">${workshop.name}</h3>
             <p>${workshop.address}</p>
             <p>Distance: ${calculateDistance(userMarker.getLatLng(), L.latLng(workshop.lat, workshop.lon)).toFixed(2)} km</p>
-            <p>Average Rating: ${workshop.rating.toFixed(1)} / 5 (${workshop.total_reviews} reviews)</p>
+            <p>Average Rating: ${workshop.rating.toFixed(1)} / 5 (${workshop.total_reviews} ${workshop.total_reviews === 1 ? 'review' : 'reviews'})</p>
             <button onclick="getDirections(${workshop.lat}, ${workshop.lon})" class="mt-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                 Get Directions
             </button>

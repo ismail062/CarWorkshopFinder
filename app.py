@@ -20,8 +20,11 @@ def index():
 @app.route('/get_workshops', methods=['POST'])
 def get_workshops():
     data = request.json
-    lat = data['lat']
-    lon = data['lon']
+    lat = data.get('lat')
+    lon = data.get('lon')
+    
+    if not lat or not lon:
+        return jsonify({"error": "Invalid latitude or longitude"}), 400
     
     # Use Overpass API to fetch car workshops
     overpass_url = "http://overpass-api.de/api/interpreter"
@@ -68,6 +71,7 @@ def get_workshops():
             'reviews': rating_review['reviews']
         })
     
+    app.logger.debug(f"Workshops data: {workshops}")
     return jsonify(workshops)
 
 @app.route('/submit_rating_review', methods=['POST'])
@@ -93,6 +97,7 @@ def submit_rating_review():
         workshop_data['rating'] = total_ratings / len(workshop_data['reviews'])
         
         app.logger.info(f"Review submitted for workshop {workshop_id}: Rating {rating}, Review: {review}")
+        app.logger.debug(f"Updated workshop data: {workshop_data}")
         return jsonify({'success': True})
     except Exception as e:
         app.logger.error(f"Error submitting review: {str(e)}")
