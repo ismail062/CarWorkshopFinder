@@ -4,7 +4,6 @@ import requests
 from urllib.parse import quote
 import json
 import logging
-import random
 
 app = Flask(__name__)
 
@@ -105,11 +104,6 @@ def get_workshops():
         total_reviews = len(rating_review['reviews'])
         average_rating = rating_review['rating'] if total_reviews > 0 else 0
         
-        # Add mock services and pricing data
-        services = ['Oil Change', 'Brake Service', 'Tire Rotation', 'Engine Tune-up']
-        workshop_services = random.sample(services, random.randint(2, 4))
-        pricing = {service: round(random.uniform(50, 200), 2) for service in workshop_services}
-        
         workshops.append({
             'id': workshop_id,
             'name': name,
@@ -118,9 +112,7 @@ def get_workshops():
             'lon': lon,
             'rating': average_rating,
             'total_reviews': total_reviews,
-            'reviews': rating_review['reviews'],
-            'services': workshop_services,
-            'pricing': pricing
+            'reviews': rating_review['reviews']
         })
     
     app.logger.debug(f"Workshops data: {workshops}")
