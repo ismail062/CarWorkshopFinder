@@ -27,8 +27,7 @@ function showManualLocationInput() {
     const manualLocationForm = document.createElement('div');
     manualLocationForm.innerHTML = `
         <h3 class="text-lg font-semibold mb-2">Enter your location</h3>
-        <input type="text" id="manual-location" class="border rounded p-2 mr-2" placeholder="City, Country">
-        <input type="text" id="postcode" class="border rounded p-2 mr-2" placeholder="UK Postcode">
+        <input type="text" id="location-input" class="border rounded p-2 mr-2" placeholder="City, Country or UK Postcode">
         <button onclick="useLocation()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Search</button>
     `;
     document.getElementById('manual-location-container').innerHTML = '';
@@ -36,20 +35,17 @@ function showManualLocationInput() {
 }
 
 function useLocation() {
-    const locationInput = document.getElementById('manual-location').value;
-    const postcodeInput = document.getElementById('postcode').value;
+    const locationInput = document.getElementById('location-input').value;
 
-    if (postcodeInput) {
-        fetchPostcodeLocation(postcodeInput);
-    } else if (locationInput) {
-        fetchManualLocation(locationInput);
+    if (locationInput) {
+        fetchLocation(locationInput);
     } else {
         alert('Please enter a location or UK postcode.');
     }
 }
 
-function fetchPostcodeLocation(postcode) {
-    fetch(`/get_postcode_location?postcode=${encodeURIComponent(postcode)}`)
+function fetchLocation(input) {
+    fetch(`/get_location?input=${encodeURIComponent(input)}`)
         .then(response => response.json())
         .then(data => {
             if (data.error) {
@@ -57,25 +53,6 @@ function fetchPostcodeLocation(postcode) {
             } else {
                 updateMap(data.lat, data.lon);
                 getWorkshops(data.lat, data.lon);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred while fetching the postcode location. Please try again.');
-        });
-}
-
-function fetchManualLocation(location) {
-    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(location)}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.length > 0) {
-                const lat = parseFloat(data[0].lat);
-                const lon = parseFloat(data[0].lon);
-                updateMap(lat, lon);
-                getWorkshops(lat, lon);
-            } else {
-                alert('Location not found. Please try again.');
             }
         })
         .catch(error => {

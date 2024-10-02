@@ -17,10 +17,9 @@
                 <h2 class="text-xl font-semibold mb-4">Map</h2>
                 <div id="map" class="rounded shadow"></div>
                 <div id="manual-location-container" class="mt-4">
-                    <h3 class="text-lg font-semibold mb-2">Enter your location</h3>
-                    <input type="text" id="manual-location" class="border rounded p-2 mr-2" placeholder="City, Country">
-                    <input type="text" id="postcode" class="border rounded p-2 mr-2" placeholder="UK Postcode">
-                    <button onclick="useLocation()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Search</button>
+                    <h3 class="text-lg font-semibold mb-2">Enter your location or postcode</h3>
+                    <input type="text" id="location-input" class="border rounded p-2 mr-2 w-full md:w-2/3" placeholder="Enter address or UK postcode">
+                    <button onclick="useLocation()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-2 md:mt-0">Search</button>
                 </div>
             </div>
             <div>

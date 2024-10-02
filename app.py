@@ -17,27 +17,38 @@ ratings_reviews = {}
 def index():
     return render_template('index.html')
 
-@app.route('/get_postcode_location')
-def get_postcode_location():
-    postcode = request.args.get('postcode')
-    if not postcode:
-        return jsonify({"error": "Postcode is required"}), 400
+@app.route('/get_location')
+def get_location():
+    input_value = request.args.get('input')
+    if not input_value:
+        return jsonify({"error": "Location or postcode is required"}), 400
 
     try:
-        response = requests.get(f"https://api.postcodes.io/postcodes/{quote(postcode)}")
-        data = response.json()
+        # First, try to fetch as a postcode
+        postcode_response = requests.get(f"https://api.postcodes.io/postcodes/{quote(input_value)}")
+        postcode_data = postcode_response.json()
 
-        if response.status_code == 200 and data['status'] == 200:
-            result = data['result']
+        if postcode_response.status_code == 200 and postcode_data['status'] == 200:
+            result = postcode_data['result']
             return jsonify({
                 "lat": result['latitude'],
                 "lon": result['longitude']
             })
         else:
-            return jsonify({"error": "Invalid postcode or unable to fetch location"}), 400
+            # If not a valid postcode, try as an address using Nominatim
+            nominatim_response = requests.get(f"https://nominatim.openstreetmap.org/search?format=json&q={quote(input_value)}")
+            nominatim_data = nominatim_response.json()
+
+            if nominatim_data and len(nominatim_data) > 0:
+                return jsonify({
+                    "lat": float(nominatim_data[0]['lat']),
+                    "lon": float(nominatim_data[0]['lon'])
+                })
+            else:
+                return jsonify({"error": "Invalid location or postcode"}), 400
     except Exception as e:
-        app.logger.error(f"Error fetching postcode location: {str(e)}")
-        return jsonify({"error": "An error occurred while fetching the postcode location"}), 500
+        app.logger.error(f"Error fetching location: {str(e)}")
+        return jsonify({"error": "An error occurred while fetching the location"}), 500
 
 @app.route('/get_workshops', methods=['POST'])
 def get_workshops():
