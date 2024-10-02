@@ -17,6 +17,28 @@ ratings_reviews = {}
 def index():
     return render_template('index.html')
 
+@app.route('/get_postcode_location')
+def get_postcode_location():
+    postcode = request.args.get('postcode')
+    if not postcode:
+        return jsonify({"error": "Postcode is required"}), 400
+
+    try:
+        response = requests.get(f"https://api.postcodes.io/postcodes/{quote(postcode)}")
+        data = response.json()
+
+        if response.status_code == 200 and data['status'] == 200:
+            result = data['result']
+            return jsonify({
+                "lat": result['latitude'],
+                "lon": result['longitude']
+            })
+        else:
+            return jsonify({"error": "Invalid postcode or unable to fetch location"}), 400
+    except Exception as e:
+        app.logger.error(f"Error fetching postcode location: {str(e)}")
+        return jsonify({"error": "An error occurred while fetching the postcode location"}), 500
+
 @app.route('/get_workshops', methods=['POST'])
 def get_workshops():
     data = request.json

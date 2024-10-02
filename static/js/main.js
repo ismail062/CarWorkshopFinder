@@ -28,34 +28,60 @@ function showManualLocationInput() {
     manualLocationForm.innerHTML = `
         <h3 class="text-lg font-semibold mb-2">Enter your location</h3>
         <input type="text" id="manual-location" class="border rounded p-2 mr-2" placeholder="City, Country">
-        <button onclick="useManualLocation()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Search</button>
+        <input type="text" id="postcode" class="border rounded p-2 mr-2" placeholder="UK Postcode">
+        <button onclick="useLocation()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Search</button>
     `;
     document.getElementById('manual-location-container').innerHTML = '';
     document.getElementById('manual-location-container').appendChild(manualLocationForm);
 }
 
-function useManualLocation() {
+function useLocation() {
     const locationInput = document.getElementById('manual-location').value;
-    if (locationInput) {
-        fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(locationInput)}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.length > 0) {
-                    const lat = parseFloat(data[0].lat);
-                    const lon = parseFloat(data[0].lon);
-                    updateMap(lat, lon);
-                    getWorkshops(lat, lon);
-                } else {
-                    alert('Location not found. Please try again.');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred while fetching the location. Please try again.');
-            });
+    const postcodeInput = document.getElementById('postcode').value;
+
+    if (postcodeInput) {
+        fetchPostcodeLocation(postcodeInput);
+    } else if (locationInput) {
+        fetchManualLocation(locationInput);
     } else {
-        alert('Please enter a location.');
+        alert('Please enter a location or UK postcode.');
     }
+}
+
+function fetchPostcodeLocation(postcode) {
+    fetch(`/get_postcode_location?postcode=${encodeURIComponent(postcode)}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert(data.error);
+            } else {
+                updateMap(data.lat, data.lon);
+                getWorkshops(data.lat, data.lon);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while fetching the postcode location. Please try again.');
+        });
+}
+
+function fetchManualLocation(location) {
+    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(location)}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.length > 0) {
+                const lat = parseFloat(data[0].lat);
+                const lon = parseFloat(data[0].lon);
+                updateMap(lat, lon);
+                getWorkshops(lat, lon);
+            } else {
+                alert('Location not found. Please try again.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while fetching the location. Please try again.');
+        });
 }
 
 function updateMap(lat, lon) {
