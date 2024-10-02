@@ -1,0 +1,11 @@
+@import 'https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css';
+
+#map {
+    height: 400px;
+    width: 100%;
+}
+
+.workshop-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
