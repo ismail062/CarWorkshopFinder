@@ -1,0 +1,47 @@
+@import 'https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css';
+
+#map {
+    height: 400px;
+    width: 100%;
+}
+
+.workshop-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.star-rating {
+    display: inline-block;
+    font-size: 0;
+    position: relative;
+    cursor: pointer;
+}
+
+.star-rating input {
+    display: none;
+}
+
+.star-rating label {
+    float: right;
+    padding: 0 2px;
+    font-size: 24px;
+    color: #ccc;
+}
+
+.star-rating label:before {
+    content: '\f005';
+    font-family: 'Font Awesome 5 Free';
+}
+
+.star-rating input:checked ~ label,
+.star-rating:not(:checked) label:hover,
+.star-rating:not(:checked) label:hover ~ label {
+    color: #f8ce0b;
+}
+
+.star-rating input:checked + label:hover,
+.star-rating input:checked ~ label:hover,
+.star-rating label:hover ~ input:checked ~ label,
+.star-rating input:checked ~ label:hover ~ label {
+    color: #ffd700;
+}

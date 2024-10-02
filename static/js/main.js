@@ -69,15 +69,17 @@ function displayWorkshops(workshops) {
             </button>
             <div id="review-form-${workshop.id}" class="hidden mt-4">
                 <textarea id="review-text-${workshop.id}" class="w-full p-2 border rounded" placeholder="Write your review"></textarea>
-                <div class="mt-2">
-                    <label>Rating: </label>
-                    <select id="rating-${workshop.id}">
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                        <option value="4">4</option>
-                        <option value="5">5</option>
-                    </select>
+                <div class="star-rating mt-2">
+                    <input type="radio" id="star5-${workshop.id}" name="rating-${workshop.id}" value="5" />
+                    <label for="star5-${workshop.id}" title="5 stars"></label>
+                    <input type="radio" id="star4-${workshop.id}" name="rating-${workshop.id}" value="4" />
+                    <label for="star4-${workshop.id}" title="4 stars"></label>
+                    <input type="radio" id="star3-${workshop.id}" name="rating-${workshop.id}" value="3" />
+                    <label for="star3-${workshop.id}" title="3 stars"></label>
+                    <input type="radio" id="star2-${workshop.id}" name="rating-${workshop.id}" value="2" />
+                    <label for="star2-${workshop.id}" title="2 stars"></label>
+                    <input type="radio" id="star1-${workshop.id}" name="rating-${workshop.id}" value="1" />
+                    <label for="star1-${workshop.id}" title="1 star"></label>
                 </div>
                 <button onclick="submitReview('${workshop.id}')" class="mt-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                     Submit Review
@@ -127,10 +129,15 @@ function showReviewForm(workshopId) {
 
 function submitReview(workshopId) {
     const reviewText = document.getElementById(`review-text-${workshopId}`).value;
-    const rating = document.getElementById(`rating-${workshopId}`).value;
+    const rating = document.querySelector(`input[name="rating-${workshopId}"]:checked`);
 
     if (!reviewText.trim()) {
         alert('Please enter a review before submitting.');
+        return;
+    }
+
+    if (!rating) {
+        alert('Please select a rating before submitting.');
         return;
     }
 
@@ -141,7 +148,7 @@ function submitReview(workshopId) {
         },
         body: JSON.stringify({
             workshop_id: workshopId,
-            rating: parseInt(rating),
+            rating: parseInt(rating.value),
             review: reviewText
         }),
     })
