@@ -23,9 +23,13 @@ def get_location():
     if not input_value:
         return jsonify({"error": "Location or postcode is required"}), 400
 
+    headers = {
+        'User-Agent': 'CarWorkshopFinder/1.0 (https://replit.com/@YourUsername/YourRepl)'
+    }
+
     try:
         # First, try to fetch as a postcode
-        postcode_response = requests.get(f"https://api.postcodes.io/postcodes/{quote(input_value)}")
+        postcode_response = requests.get(f"https://api.postcodes.io/postcodes/{quote(input_value)}", headers=headers)
         postcode_data = postcode_response.json()
 
         if postcode_response.status_code == 200 and postcode_data['status'] == 200:
@@ -36,19 +40,26 @@ def get_location():
             })
         else:
             # If not a valid postcode, try as an address using Nominatim
-            nominatim_response = requests.get(f"https://nominatim.openstreetmap.org/search?format=json&q={quote(input_value)}")
-            nominatim_data = nominatim_response.json()
-
-            if nominatim_data and len(nominatim_data) > 0:
-                return jsonify({
-                    "lat": float(nominatim_data[0]['lat']),
-                    "lon": float(nominatim_data[0]['lon'])
-                })
+            nominatim_response = requests.get(f"https://nominatim.openstreetmap.org/search?format=json&q={quote(input_value)}", headers=headers)
+            
+            if nominatim_response.status_code == 200:
+                nominatim_data = nominatim_response.json()
+                if nominatim_data and len(nominatim_data) > 0:
+                    return jsonify({
+                        "lat": float(nominatim_data[0]['lat']),
+                        "lon": float(nominatim_data[0]['lon'])
+                    })
+                else:
+                    return jsonify({"error": "Location not found"}), 404
             else:
-                return jsonify({"error": "Invalid location or postcode"}), 400
-    except Exception as e:
-        app.logger.error(f"Error fetching location: {str(e)}")
+                app.logger.error(f"Nominatim API error: {nominatim_response.status_code} - {nominatim_response.text}")
+                return jsonify({"error": "Error fetching location data"}), 500
+    except requests.RequestException as e:
+        app.logger.error(f"Request error: {str(e)}")
         return jsonify({"error": "An error occurred while fetching the location"}), 500
+    except Exception as e:
+        app.logger.error(f"Unexpected error: {str(e)}")
+        return jsonify({"error": "An unexpected error occurred"}), 500
 
 @app.route('/get_workshops', methods=['POST'])
 def get_workshops():
