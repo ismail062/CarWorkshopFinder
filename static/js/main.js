@@ -145,11 +145,11 @@ function displayWorkshops(workshops) {
 
 function applyFilters() {
     const serviceFilter = document.getElementById('service-filter').value;
-    const maxPriceFilter = parseFloat(document.getElementById('max-price-filter').value);
+    const maxPriceFilter = document.getElementById('max-price-filter').value;
 
     const filteredWorkshops = allWorkshops.filter(workshop => {
         const serviceMatch = !serviceFilter || workshop.services.includes(serviceFilter);
-        const priceMatch = !maxPriceFilter || Object.values(workshop.pricing).some(price => price <= maxPriceFilter);
+        const priceMatch = !maxPriceFilter || Object.values(workshop.pricing).some(price => price <= parseFloat(maxPriceFilter));
         return serviceMatch && priceMatch;
     });
 
@@ -280,4 +280,7 @@ function submitReview(workshopId) {
 document.addEventListener('DOMContentLoaded', function() {
     initMap();
     getUserLocation();
+
+    document.getElementById('service-filter').addEventListener('change', applyFilters);
+    document.getElementById('max-price-filter').addEventListener('input', applyFilters);
 });
