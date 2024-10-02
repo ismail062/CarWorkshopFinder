@@ -18,10 +18,44 @@ function getUserLocation() {
             getWorkshops(lat, lon);
         }, function(error) {
             console.error("Error getting user location:", error);
-            alert("Unable to get your location. Please enable location services and try again.");
+            showManualLocationInput();
         });
     } else {
-        alert("Geolocation is not supported by your browser.");
+        showManualLocationInput();
+    }
+}
+
+function showManualLocationInput() {
+    const manualLocationForm = document.createElement('div');
+    manualLocationForm.innerHTML = `
+        <h3>Enter your location</h3>
+        <input type="text" id="manual-location" placeholder="City, Country">
+        <button onclick="useManualLocation()">Search</button>
+    `;
+    document.getElementById('map').appendChild(manualLocationForm);
+}
+
+function useManualLocation() {
+    const locationInput = document.getElementById('manual-location').value;
+    if (locationInput) {
+        fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(locationInput)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.length > 0) {
+                    const lat = parseFloat(data[0].lat);
+                    const lon = parseFloat(data[0].lon);
+                    updateMap(lat, lon);
+                    getWorkshops(lat, lon);
+                } else {
+                    alert('Location not found. Please try again.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while fetching the location. Please try again.');
+            });
+    } else {
+        alert('Please enter a location.');
     }
 }
 
@@ -60,7 +94,7 @@ function displayWorkshops(workshops) {
             <h3 class="font-bold">${workshop.name}</h3>
             <p>${workshop.address}</p>
             <p>Distance: ${calculateDistance(userMarker.getLatLng(), L.latLng(workshop.lat, workshop.lon)).toFixed(2)} km</p>
-            <p>Rating: ${workshop.rating.toFixed(1)} / 5</p>
+            <p>Average Rating: ${workshop.rating.toFixed(1)} / 5 (${workshop.total_reviews} reviews)</p>
             <button onclick="getDirections(${workshop.lat}, ${workshop.lon})" class="mt-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                 Get Directions
             </button>
@@ -81,9 +115,9 @@ function displayWorkshops(workshops) {
                 </button>
             </div>
             <div class="mt-4">
-                <h4 class="font-semibold">Reviews:</h4>
+                <h4 class="font-semibold">Recent Reviews:</h4>
                 <ul>
-                    ${workshop.reviews.map(review => `
+                    ${workshop.reviews.slice(0, 3).map(review => `
                         <li class="mt-2">
                             <p>Rating: ${review.rating} / 5</p>
                             <p>${review.review}</p>
@@ -156,7 +190,7 @@ function addWorkshopsToMap(workshops) {
 }
 
 function calculateDistance(latlng1, latlng2) {
-    return (latlng1.distanceTo(latlng2) / 1000); // Convert meters to kilometers
+    return (latlng1.distanceTo(latlng2) / 1000);
 }
 
 function getDirections(lat, lon) {
@@ -206,7 +240,7 @@ function submitReview(workshopId) {
     .then(data => {
         if (data.success) {
             alert('Review submitted successfully!');
-            getUserLocation(); // Refresh the workshop list
+            getUserLocation();
         } else {
             alert('Failed to submit review: ' + (data.error || 'Unknown error'));
         }

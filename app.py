@@ -53,13 +53,18 @@ def get_workshops():
         workshop_id = f"{lat},{lon}"
         rating_review = ratings_reviews.get(workshop_id, {'rating': 0, 'reviews': []})
         
+        # Calculate summary information
+        total_reviews = len(rating_review['reviews'])
+        average_rating = rating_review['rating'] if total_reviews > 0 else 0
+        
         workshops.append({
             'id': workshop_id,
             'name': name,
             'address': address,
             'lat': lat,
             'lon': lon,
-            'rating': rating_review['rating'],
+            'rating': average_rating,
+            'total_reviews': total_reviews,
             'reviews': rating_review['reviews']
         })
     
